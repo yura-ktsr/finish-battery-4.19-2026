@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Калькулятор запасу ходу електроскутера для кур'єрів — точний розрахунок з урахуванням маси, погоди, рельєфу, температури та зносу батареї.">
+<meta property="og:title" content="Заряд.км — Калькулятор запасу ходу електроскутера">
+<meta property="og:description" content="Дізнайся реальний запас ходу твого електроскутера за секунди. Для кур'єрів України.">
+<title>Заряд.км — Калькулятор запасу ходу електроскутера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── CSS Variables ─── */
+:root {
+  --bg: #0D0D0D;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --border: #2A2A2A;
+  --text: #E8E8E8;
+  --text-muted: #888888;
+  --text-dim: #555555;
+  --accent: #00E5A0;
+  --accent-dim: #00E5A033;
+  --accent-hover: #00FFBB;
+  --danger: #FF4444;
+  --danger-bg: #FF44441A;
+  --warning: #FFAA00;
+  --warning-bg: #FFAA001A;
+  --success: #00E5A0;
+  --success-bg: #00E5A01A;
+  --input-bg: #111111;
+  --input-border: #333333;
+  --input-focus: #00E5A0;
+  --slider-track: #333333;
+  --slider-fill: #00E5A0;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-bottom: 120px;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ─── Header ─── */
+.header {
+  padding: 20px 16px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.header-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.header-logo svg { width: 32px; height: 32px; }
+.header-logo h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+.header-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* ─── Container ─── */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ─── Section / Accordion ─── */
+.section {
+  margin-top: 12px;
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.section:hover { border-color: #333333; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+.section-header:hover { background: var(--card-hover); }
+.section-header svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.section-header h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+}
+.section-chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+.section.open .section-chevron { transform: rotate(180deg); }
+.section-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.section.open .section-body {
+  max-height: 2000px;
+  padding: 0 16px 16px;
+}
+
+/* ─── Form Fields ─── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.field-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ─── Inputs ─── */
+input[type="number"], select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input[type="number"]:focus, select:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+input[type="number"].error, select.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px #FF444433;
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+input::placeholder { color: var(--text-dim); }
+
+/* ─── Slider ─── */
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent);
+  cursor: pointer;
+}
+.slider-num {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ─── Dual Input (select + number) ─── */
+.dual-input { display: flex; gap: 8px; }
+.dual-input select { flex: 1; }
+.dual-input input { flex: 1; }
+
+/* ─── Dashboard ─── */
+.dashboard {
+  margin-top: 16px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 20px 16px;
+  text-align: center;
+}
+.dashboard-main {
+  font-family: var(--font-mono);
+  font-size: 3.2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+.dashboard-main.danger { color: var(--danger); }
+.dashboard-main.warning { color: var(--warning); }
+.dashboard-main.success { color: var(--success); }
+.dashboard-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ─── Progress Bar ─── */
+.progress-wrap {
+  position: relative;
+  height: 8px;
+  background: var(--input-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease, background 0.3s ease;
+  background: var(--accent);
+}
+.progress-fill.danger { background: var(--danger); }
+.progress-fill.warning { background: var(--warning); }
+.progress-fill.success { background: var(--success); }
+.progress-markers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* ─── Metric Cards ─── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.metric-card {
+  background: var(--input-bg);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.metric-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Tips Section ─── */
+.tips-section {
+  margin-top: 16px;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+.tips-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tips-title svg { width: 18px; height: 18px; color: var(--accent); }
+.tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--input-bg);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease;
+}
+.tip-card:last-child { margin-bottom: 0; }
+.tip-card:hover { border-color: var(--accent); }
+.tip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tip-icon svg { width: 18px; height: 18px; color: var(--accent); }
+.tip-content { flex: 1; }
+.tip-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.tip-delta {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ─── Sticky Bottom Bar ─── */
+.sticky-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(13,13,13,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px 16px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sticky-result {
+  flex: 1;
+  text-align: center;
+}
+.sticky-km {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+.sticky-km.danger { color: var(--danger); }
+.sticky-km.warning { color: var(--warning); }
+.sticky-km.success { color: var(--success); }
+.sticky-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sticky-btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+.sticky-btn:active { transform: scale(0.96); }
+.sticky-btn:hover { background: var(--accent-hover); }
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease; }
+
+/* ─── Responsive ─── */
+@media (min-width: 640px) {
+  body { padding-bottom: 0; }
+  .sticky-bar { display: none; }
+  .container { max-width: 520px; padding: 0 24px; }
+  .dashboard-main { font-size: 4rem; }
+  .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ─── Utility ─── */
+.hidden { display: none !important; }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<!-- ─── Header ─── -->
+<header class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="14" width="24" height="10" rx="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      <circle cx="9" cy="24" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      <circle cx="23" cy="24" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M8 14V10C8 8 10 6 12 6H20C22 6 24 8 24 10V14" stroke="currentColor" stroke-width="2" fill="none"/>
+      <rect x="13" y="2" width="6" height="4" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+      <path d="M16 2V0" stroke="currentColor" stroke-width="2"/>
+      <path d="M20 18H24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M20 20H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <h1>Заряд.км</h1>
+  </div>
+  <p class="header-sub">Точний розрахунок запасу ходу для кур'єрів на електроскутерах</p>
+</header>
+
+<div class="container">
+
+  <!-- ─── Section 1: Battery ─── -->
+  <div class="section open" id="sec-battery">
+    <div class="section-header" onclick="toggleSection('sec-battery')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/>
+        <path d="M6 11h.01"/><path d="M10 11h.01"/>
+      </svg>
+      <h2>Акумулятор</h2>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div class="field-label"><span>Напруга акумулятора</span><span class="field-value" id="val-voltage">48 В</span></div>
+        <div class="dual-input">
+          <select id="voltage-select" onchange="onVoltageSelect()">
+            <option value="36">36 В</option>
+            <option value="48" selected>48 В</option>
+            <option value="60">60 В</option>
+            <option value="72">72 В</option>
+            <option value="custom">Інше...</option>
+          </select>
+          <input type="number" id="voltage-input" value="48" min="12" max="120" step="1" inputmode="decimal" oninput="onVoltageInput()" style="display:none;">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Ємність акумулятора</span><span class="field-value" id="val-capacity">20 А·год</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="capacity-slider" min="5" max="50" value="20" step="1" oninput="onCapacitySlider()">
+          <input type="number" id="capacity-input" value="20" min="1" max="100" step="0.5" inputmode="decimal" class="slider-num" style="width:60px;min-width:60px;" oninput="onCapacityInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Стан заряду (SOC)</span><span class="field-value" id="val-soc">100%</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="soc-slider" min="0" max="100" value="100" step="1" oninput="onSocSlider()">
+          <span class="slider-num" id="soc-num">100%</span>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Вік / знос акумулятора</span></div>
+        <select id="battery-age" onchange="calculate()">
+          <option value="1.00">Новий (100%)</option>
+          <option value="0.95">До 1 року (95%)</option>
+          <option value="0.88">1–2 роки (88%)</option>
+          <option value="0.78">2–3 роки (78%)</option>
+          <option value="0.65">3+ роки (65%)</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Хімія акумулятора</span></div>
+        <select id="battery-chem" onchange="calculate()">
+          <option value="liion" selected>Li-ion</option>
+          <option value="lifepo4">LiFePO₄</option>
+          <option value="nimh">NiMH</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Section 2: Weight ─── -->
+  <div class="section" id="sec-weight">
+    <div class="section-header" onclick="toggleSection('sec-weight')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+      <h2>Маса системи</h2>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div class="field-label"><span>Власна вага кур'єра</span><span class="field-value" id="val-courier">75 кг</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="courier-slider" min="40" max="150" value="75" step="1" oninput="onCourierSlider()">
+          <input type="number" id="courier-input" value="75" min="20" max="200" step="1" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onCourierInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Вага спорядження / одягу</span><span class="field-value" id="val-gear">3 кг</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="gear-slider" min="0" max="20" value="3" step="0.5" oninput="onGearSlider()">
+          <input type="number" id="gear-input" value="3" min="0" max="50" step="0.5" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onGearInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Вага вантажу / посилок</span><span class="field-value" id="val-cargo">5 кг</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="cargo-slider" min="0" max="30" value="5" step="0.5" oninput="onCargoSlider()">
+          <input type="number" id="cargo-input" value="5" min="0" max="100" step="0.5" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onCargoInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Вага скутера</span><span class="field-value" id="val-scooter">65 кг</span></div>
+        <div class="dual-input">
+          <select id="scooter-select" onchange="onScooterSelect()">
+            <option value="50">Легкий (50 кг)</option>
+            <option value="65" selected>Середній (65 кг)</option>
+            <option value="80">Важкий (80 кг)</option>
+            <option value="custom">Інше...</option>
+          </select>
+          <input type="number" id="scooter-input" value="65" min="10" max="200" step="1" inputmode="decimal" oninput="onScooterInput()" style="display:none;">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Додаткове обладнання</span><span class="field-value" id="val-extra">2 кг</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="extra-slider" min="0" max="15" value="2" step="0.5" oninput="onExtraSlider()">
+          <input type="number" id="extra-input" value="2" min="0" max="50" step="0.5" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onExtraInput()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Section 3: Trip Conditions ─── -->
+  <div class="section" id="sec-trip">
+    <div class="section-header" onclick="toggleSection('sec-trip')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <h2>Умови поїздки</h2>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <div class="field-label"><span>Середня швидкість</span><span class="field-value" id="val-speed">30 км/год</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="speed-slider" min="10" max="60" value="30" step="1" oninput="onSpeedSlider()">
+          <input type="number" id="speed-input" value="30" min="5" max="100" step="1" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onSpeedInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Манера їзди</span></div>
+        <select id="riding-style" onchange="calculate()">
+          <option value="eco">Плавна (eco) — економія</option>
+          <option value="normal" selected>Змішана (normal)</option>
+          <option value="sport">Агресивна (sport)</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Температура повітря</span><span class="field-value" id="val-temp">+20°C</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="temp-slider" min="-20" max="40" value="20" step="1" oninput="onTempSlider()">
+          <span class="slider-num" id="temp-num">+20°</span>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Погодні умови</span></div>
+        <select id="weather" onchange="calculate()">
+          <option value="1.00">Сухо і сонячно</option>
+          <option value="1.00">Хмарно</option>
+          <option value="1.04">Легкий дощ</option>
+          <option value="1.10">Сильний дощ</option>
+          <option value="1.20">Сніг / слизько</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Напрямок вітру</span></div>
+        <select id="wind-dir" onchange="calculate()">
+          <option value="tailwind">Попутний</option>
+          <option value="cross" selected>Боковий</option>
+          <option value="headwind">Зустрічний</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Швидкість вітру</span><span class="field-value" id="val-wind">10 км/год</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="wind-slider" min="0" max="50" value="10" step="1" oninput="onWindSlider()">
+          <input type="number" id="wind-input" value="10" min="0" max="100" step="1" inputmode="decimal" class="slider-num" style="width:60px;" oninput="onWindInput()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Тип покриття</span></div>
+        <select id="surface" onchange="calculate()">
+          <option value="ideal">Ідеальний асфальт</option>
+          <option value="normal" selected>Звичайний асфальт</option>
+          <option value="cobble">Бруківка / нерівний асфальт</option>
+          <option value="dirt">Грунтова дорога / тротуар</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Регіон</span></div>
+        <select id="region" onchange="onRegionChange()">
+          <option value="center" selected>Центр</option>
+          <option value="north">Північ</option>
+          <option value="south">Південь</option>
+          <option value="east">Схід</option>
+          <option value="west">Захід</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Місто</span></div>
+        <select id="city" onchange="onCityChange()">
+          <option value="kyiv" data-region="center" data-terrain="rolling" data-road="1.05">Київ</option>
+          <option value="kharkiv" data-region="east" data-terrain="flat" data-road="1.02">Харків</option>
+          <option value="odesa" data-region="south" data-terrain="flat" data-road="1.08">Одеса</option>
+          <option value="dnipro" data-region="center" data-terrain="rolling" data-road="1.04">Дніпро</option>
+          <option value="lviv" data-region="west" data-terrain="hilly" data-road="1.06">Львів</option>
+          <option value="zaporizhzhia" data-region="south" data-terrain="flat" data-road="1.05">Запоріжжя</option>
+          <option value="kryvyi_rih" data-region="center" data-terrain="rolling" data-road="1.10">Кривий Ріг</option>
+          <option value="mykolaiv" data-region="south" data-terrain="flat" data-road="1.06">Миколаїв</option>
+          <option value="vinnytsia" data-region="west" data-terrain="rolling" data-road="1.03">Вінниця</option>
+          <option value="poltava" data-region="east" data-terrain="flat" data-road="1.02">Полтава</option>
+          <option value="chernivtsi" data-region="west" data-terrain="hilly" data-road="1.08">Чернівці</option>
+          <option value="uzhhorod" data-region="west" data-terrain="hilly" data-road="1.07">Ужгород</option>
+          <option value="kherson" data-region="south" data-terrain="flat" data-road="1.09">Херсон</option>
+          <option value="sumy" data-region="east" data-terrain="flat" data-road="1.03">Суми</option>
+          <option value="chernihiv" data-region="north" data-terrain="flat" data-road="1.04">Чернігів</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label"><span>Тиск у шинах</span><span class="field-value" id="val-pressure">2.8 бар</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="pressure-slider" min="1.5" max="4.0" value="2.8" step="0.1" oninput="onPressureSlider()">
+          <span class="slider-num" id="pressure-num">2.8</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Dashboard ─── -->
+  <div class="dashboard" id="dashboard">
+    <div class="dashboard-main success" id="result-km">≈ 42 км</div>
+    <div class="dashboard-label">Розрахунковий запас ходу</div>
+    <div class="progress-wrap">
+      <div class="progress-fill success" id="progress-bar" style="width:70%"></div>
+    </div>
+    <div class="progress-markers">
+      <span>0</span>
+      <span id="marker-20">20%</span>
+      <span id="marker-50">50%</span>
+      <span id="marker-80">80%</span>
+      <span>100%</span>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="metric-whkm">18.5</div>
+        <div class="metric-label">Вт·год/км</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-energy">864</div>
+        <div class="metric-label">Вт·год</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-time">1г 24хв</div>
+        <div class="metric-label">Час поїздки</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-power">556</div>
+        <div class="metric-label">Середня потужність, Вт</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-buffer">6.3</div>
+        <div class="metric-label">Буфер до 15% SOC, км</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metric-recommended">38</div>
+        <div class="metric-label">Рекомендований запас, км</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Tips ─── -->
+  <div class="tips-section" id="tips-section">
+    <div class="tips-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+      </svg>
+      Що можна покращити?
+    </div>
+    <div id="tips-container"></div>
+  </div>
+
+</div>
+
+<!-- ─── Sticky Bottom Bar ─── -->
+<div class="sticky-bar">
+  <div class="sticky-result">
+    <div class="sticky-km success" id="sticky-km">≈ 42 км</div>
+    <div class="sticky-label">Запас ходу</div>
+  </div>
+  <button class="sticky-btn" onclick="scrollToTop()">Нагору ↑</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+
+const CHEMISTRY = {
+  liion:   { peukert: 1.15, dod: 0.90, tempCoeff: { '-20':0.55, '-10':0.70, '0':0.82, '10':0.93, '20':1.00, '30':0.98, '40':0.95 } },
+  lifepo4: { peukert: 1.05, dod: 0.95, tempCoeff: { '-20':0.65, '-10':0.78, '0':0.88, '10':0.96, '20':1.00, '30':0.99, '40':0.97 } },
+  nimh:    { peukert: 1.25, dod: 0.80, tempCoeff: { '-20':0.45, '-10':0.60, '0':0.75, '10':0.88, '20':1.00, '30':0.96, '40':0.90 } }
+};
+
+const RIDING_STYLE = { eco: 0.82, normal: 1.00, sport: 1.28 };
+const SURFACE_CRR = { ideal: 0.008, normal: 0.012, cobble: 0.020, dirt: 0.035 };
+const TERRAIN = { flat: { slope: 0, penalty: 0, regen: 0 }, rolling: { slope: 1.5, penalty: 0.08, regen: 0.05 }, hilly: { slope: 3.0, penalty: 0.18, regen: 0.10 } };
+const MOTOR_EFF = 0.85;
+const G = 9.81;
+const RHO = 1.225;
+const CD = 1.0;
+const AREA = 0.5;
+const BASE_MASS = 100;
+
+const CITIES = {
+  kyiv:           { terrain:'rolling', road:1.05, region:'center' },
+  kharkiv:        { terrain:'flat',    road:1.02, region:'east' },
+  odesa:          { terrain:'flat',    road:1.08, region:'south' },
+  dnipro:         { terrain:'rolling', road:1.04, region:'center' },
+  lviv:           { terrain:'hilly',   road:1.06, region:'west' },
+  zaporizhzhia:   { terrain:'flat',    road:1.05, region:'south' },
+  kryvyi_rih:     { terrain:'rolling', road:1.10, region:'center' },
+  mykolaiv:       { terrain:'flat',    road:1.06, region:'south' },
+  vinnytsia:      { terrain:'rolling', road:1.03, region:'west' },
+  poltava:        { terrain:'flat',    road:1.02, region:'east' },
+  chernivtsi:     { terrain:'hilly',   road:1.08, region:'west' },
+  uzhhorod:       { terrain:'hilly',   road:1.07, region:'west' },
+  kherson:        { terrain:'flat',    road:1.09, region:'south' },
+  sumy:           { terrain:'flat',    road:1.03, region:'east' },
+  chernihiv:      { terrain:'flat',    road:1.04, region:'north' }
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+
+let state = {
+  voltage: 48,
+  capacity: 20,
+  soc: 100,
+  batteryAge: 1.00,
+  chem: 'liion',
+  courier: 75,
+  gear: 3,
+  cargo: 5,
+  scooter: 65,
+  extra: 2,
+  speed: 30,
+  style: 'normal',
+  temp: 20,
+  weather: 1.00,
+  windDir: 'cross',
+  windSpeed: 10,
+  surface: 'normal',
+  city: 'kyiv',
+  pressure: 2.8
+};
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function q(id) { return document.getElementById(id); }
+
+function setVal(id, text) {
+  const el = q('val-' + id);
+  if (el) el.textContent = text;
+}
+
+// ─── Voltage ───
+function onVoltageSelect() {
+  const sel = q('voltage-select');
+  const inp = q('voltage-input');
+  if (sel.value === 'custom') {
+    inp.style.display = 'block';
+    inp.focus();
+  } else {
+    inp.style.display = 'none';
+    state.voltage = parseFloat(sel.value);
+    setVal('voltage', state.voltage + ' В');
+    calculate();
+  }
+}
+function onVoltageInput() {
+  let v = parseFloat(q('voltage-input').value);
+  if (!isNaN(v) && v >= 12 && v <= 120) {
+    state.voltage = v;
+    setVal('voltage', v + ' В');
+    calculate();
+  }
+}
+
+// ─── Capacity ───
+function onCapacitySlider() {
+  state.capacity = parseFloat(q('capacity-slider').value);
+  q('capacity-input').value = state.capacity;
+  setVal('capacity', state.capacity + ' А·год');
+  calculate();
+}
+function onCapacityInput() {
+  let v = parseFloat(q('capacity-input').value);
+  if (!isNaN(v) && v >= 1 && v <= 100) {
+    state.capacity = v;
+    q('capacity-slider').value = v;
+    setVal('capacity', v + ' А·год');
+    calculate();
+  }
+}
+
+// ─── SOC ───
+function onSocSlider() {
+  state.soc = parseInt(q('soc-slider').value);
+  q('soc-num').textContent = state.soc + '%';
+  setVal('soc', state.soc + '%');
+  calculate();
+}
+
+// ─── Courier ───
+function onCourierSlider() {
+  state.courier = parseFloat(q('courier-slider').value);
+  q('courier-input').value = state.courier;
+  setVal('courier', state.courier + ' кг');
+  calculate();
+}
+function onCourierInput() {
+  let v = parseFloat(q('courier-input').value);
+  if (!isNaN(v) && v >= 20 && v <= 200) {
+    state.courier = v;
+    q('courier-slider').value = v;
+    setVal('courier', v + ' кг');
+    calculate();
+  }
+}
+
+// ─── Gear ───
+function onGearSlider() {
+  state.gear = parseFloat(q('gear-slider').value);
+  q('gear-input').value = state.gear;
+  setVal('gear', state.gear + ' кг');
+  calculate();
+}
+function onGearInput() {
+  let v = parseFloat(q('gear-input').value);
+  if (!isNaN(v) && v >= 0 && v <= 50) {
+    state.gear = v;
+    q('gear-slider').value = v;
+    setVal('gear', v + ' кг');
+    calculate();
+  }
+}
+
+// ─── Cargo ───
+function onCargoSlider() {
+  state.cargo = parseFloat(q('cargo-slider').value);
+  q('cargo-input').value = state.cargo;
+  setVal('cargo', state.cargo + ' кг');
+  calculate();
+}
+function onCargoInput() {
+  let v = parseFloat(q('cargo-input').value);
+  if (!isNaN(v) && v >= 0 && v <= 100) {
+    state.cargo = v;
+    q('cargo-slider').value = v;
+    setVal('cargo', v + ' кг');
+    calculate();
+  }
+}
+
+// ─── Scooter ───
+function onScooterSelect() {
+  const sel = q('scooter-select');
+  const inp = q('scooter-input');
+  if (sel.value === 'custom') {
+    inp.style.display = 'block';
+    inp.focus();
+  } else {
+    inp.style.display = 'none';
+    state.scooter = parseFloat(sel.value);
+    setVal('scooter', state.scooter + ' кг');
+    calculate();
+  }
+}
+function onScooterInput() {
+  let v = parseFloat(q('scooter-input').value);
+  if (!isNaN(v) && v >= 10 && v <= 200) {
+    state.scooter = v;
+    setVal('scooter', v + ' кг');
+    calculate();
+  }
+}
+
+// ─── Extra ───
+function onExtraSlider() {
+  state.extra = parseFloat(q('extra-slider').value);
+  q('extra-input').value = state.extra;
+  setVal('extra', state.extra + ' кг');
+  calculate();
+}
+function onExtraInput() {
+  let v = parseFloat(q('extra-input').value);
+  if (!isNaN(v) && v >= 0 && v <= 50) {
+    state.extra = v;
+    q('extra-slider').value = v;
+    setVal('extra', v + ' кг');
+    calculate();
+  }
+}
+
+// ─── Speed ───
+function onSpeedSlider() {
+  state.speed = parseFloat(q('speed-slider').value);
+  q('speed-input').value = state.speed;
+  setVal('speed', state.speed + ' км/год');
+  calculate();
+}
+function onSpeedInput() {
+  let v = parseFloat(q('speed-input').value);
+  if (!isNaN(v) && v >= 5 && v <= 100) {
+    state.speed = v;
+    q('speed-slider').value = v;
+    setVal('speed', v + ' км/год');
+    calculate();
+  }
+}
+
+// ─── Temp ───
+function onTempSlider() {
+  state.temp = parseInt(q('temp-slider').value);
+  const sign = state.temp > 0 ? '+' : '';
+  q('temp-num').textContent = sign + state.temp + '°';
+  setVal('temp', sign + state.temp + '°C');
+  calculate();
+}
+
+// ─── Wind ───
+function onWindSlider() {
+  state.windSpeed = parseFloat(q('wind-slider').value);
+  q('wind-input').value = state.windSpeed;
+  setVal('wind', state.windSpeed + ' км/год');
+  calculate();
+}
+function onWindInput() {
+  let v = parseFloat(q('wind-input').value);
+  if (!isNaN(v) && v >= 0 && v <= 100) {
+    state.windSpeed = v;
+    q('wind-slider').value = v;
+    setVal('wind', v + ' км/год');
+    calculate();
+  }
+}
+
+// ─── Pressure ───
+function onPressureSlider() {
+  state.pressure = parseFloat(q('pressure-slider').value);
+  q('pressure-num').textContent = state.pressure.toFixed(1);
+  setVal('pressure', state.pressure.toFixed(1) + ' бар');
+  calculate();
+}
+
+// ─── Region / City ───
+function onRegionChange() {
+  const region = q('region').value;
+  const citySel = q('city');
+  for (let opt of citySel.options) {
+    opt.style.display = opt.dataset.region === region ? 'block' : 'none';
+  }
+  for (let opt of citySel.options) {
+    if (opt.style.display !== 'none') { citySel.value = opt.value; break; }
+  }
+  onCityChange();
+}
+function onCityChange() {
+  const city = q('city').value;
+  state.city = city;
+  const data = CITIES[city];
+  if (data) {
+    q('region').value = data.region;
+    const citySel = q('city');
+    for (let opt of citySel.options) {
+      opt.style.display = opt.dataset.region === data.region ? 'block' : 'none';
+    }
+  }
+  calculate();
+}
+
+// ═══════════════════════════════════════════
+// PHYSICS CALCULATION
+// ═══════════════════════════════════════════
+
+function getTempCoeff(chem, temp) {
+  const coeffs = CHEMISTRY[chem].tempCoeff;
+  const keys = Object.keys(coeffs).map(Number).sort((a,b)=>a-b);
+  if (temp <= keys[0]) return coeffs[keys[0]];
+  if (temp >= keys[keys.length-1]) return coeffs[keys[keys.length-1]];
+  for (let i = 0; i < keys.length-1; i++) {
+    if (temp >= keys[i] && temp <= keys[i+1]) {
+      const t1 = keys[i], t2 = keys[i+1];
+      const c1 = coeffs[t1], c2 = coeffs[t2];
+      return c1 + (c2 - c1) * (temp - t1) / (t2 - t1);
+    }
+  }
+  return 1.0;
+}
+
+function getTireCoeff(pressure) {
+  if (pressure < 2.0) return 1.15;
+  if (pressure > 3.5) return 1.03;
+  if (pressure <= 2.8) return 1.15 - (pressure - 2.0) * (0.15 / 0.8);
+  return 1.00 + (pressure - 2.8) * (0.03 / 0.7);
+}
+
+function calculate() {
+  state.batteryAge = parseFloat(q('battery-age').value);
+  state.chem = q('battery-chem').value;
+  state.style = q('riding-style').value;
+  state.weather = parseFloat(q('weather').value);
+  state.windDir = q('wind-dir').value;
+  state.surface = q('surface').value;
+
+  const chem = CHEMISTRY[state.chem];
+  const cityData = CITIES[state.city];
+  const terrain = TERRAIN[cityData.terrain];
+
+  // ─── Battery Energy ───
+  const tempCoeff = getTempCoeff(state.chem, state.temp);
+  const energyWh = state.voltage * state.capacity * (state.soc / 100) * state.batteryAge * chem.dod * tempCoeff;
+
+  // ─── Mass ───
+  const totalMass = state.courier + state.gear + state.cargo + state.scooter + state.extra;
+  const massFactor = 1 + ((totalMass - BASE_MASS) / 10) * 0.04;
+
+  // ─── Speed ───
+  const v_ms = state.speed / 3.6;
+  const v_kmh = state.speed;
+
+  // ─── Rolling Resistance ───
+  const crr_base = SURFACE_CRR[state.surface];
+  const tireCoeff = getTireCoeff(state.pressure);
+  const crr_eff = crr_base * tireCoeff;
+  const P_roll = crr_eff * totalMass * G * v_ms;
+
+  // ─── Aerodynamics ───
+  let v_wind_eff = 0;
+  const v_wind_ms = state.windSpeed / 3.6;
+  if (state.windDir === 'headwind') v_wind_eff = v_wind_ms;
+  else if (state.windDir === 'tailwind') v_wind_eff = -v_wind_ms;
+  else v_wind_eff = v_wind_ms * 0.5;
+  const v_eff = v_ms + v_wind_eff;
+  const P_aero = 0.5 * CD * AREA * RHO * Math.pow(v_eff, 3);
+
+  // ─── Gravity ───
+  const slopeRad = terrain.slope * Math.PI / 180;
+  const P_grav = totalMass * G * v_ms * Math.sin(slopeRad);
+
+  // ─── Acceleration ───
+  const accelPower = {
+    eco: 0.05 * totalMass * v_ms,
+    normal: 0.12 * totalMass * v_ms,
+    sport: 0.25 * totalMass * v_ms
+  }[state.style];
+
+  // ─── Total Power ───
+  let P_total = (P_roll + P_aero + P_grav + accelPower) * RIDING_STYLE[state.style] * state.weather * massFactor * cityData.road;
+  P_total *= (1 - terrain.regen);
+
+  // ─── Motor Efficiency ───
+  const P_motor = P_total / MOTOR_EFF;
+
+  // ─── Current & Peukert ───
+  const I_real = P_motor / state.voltage;
+  const I_nominal = state.capacity;
+  const peukertFactor = Math.pow(I_nominal / Math.max(I_real, 0.1), chem.peukert - 1);
+  const effectiveCapacity = state.capacity * peukertFactor;
+  const effectiveEnergy = state.voltage * effectiveCapacity * (state.soc / 100) * state.batteryAge * chem.dod * tempCoeff;
+
+  // ─── Consumption & Range ───
+  const whPerKm = P_motor / v_kmh;
+  const rangeKm = effectiveEnergy / whPerKm;
+
+  // ─── Buffer & Recommended ───
+  const bufferSoc = 15;
+  const bufferEnergy = state.voltage * effectiveCapacity * (bufferSoc / 100) * state.batteryAge * chem.dod * tempCoeff;
+  const bufferKm = bufferEnergy / whPerKm;
+  const recommendedKm = rangeKm * 0.90;
+
+  // ─── Time ───
+  const hours = rangeKm / v_kmh;
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  const timeStr = h > 0 ? h + 'г ' + m + 'хв' : m + 'хв';
+
+  // ═══════════════════════════════════════════
+  // UPDATE UI
+  // ═══════════════════════════════════════════
+
+  const kmEl = q('result-km');
+  const stickyKm = q('sticky-km');
+  const progress = q('progress-bar');
+
+  let colorClass = 'success';
+  if (rangeKm < 15) colorClass = 'danger';
+  else if (rangeKm < 30) colorClass = 'warning';
+
+  kmEl.className = 'dashboard-main ' + colorClass;
+  stickyKm.className = 'sticky-km ' + colorClass;
+  progress.className = 'progress-fill ' + colorClass;
+
+  const kmText = '≈ ' + Math.round(rangeKm) + ' км';
+  kmEl.textContent = kmText;
+  stickyKm.textContent = kmText;
+
+  const progressPct = Math.min((rangeKm / 80) * 100, 100);
+  progress.style.width = progressPct + '%';
+
+  q('marker-20').textContent = Math.round(rangeKm * 0.2) + ' км';
+  q('marker-50').textContent = Math.round(rangeKm * 0.5) + ' км';
+  q('marker-80').textContent = Math.round(rangeKm * 0.8) + ' км';
+
+  q('metric-whkm').textContent = whPerKm.toFixed(1);
+  q('metric-energy').textContent = Math.round(effectiveEnergy);
+  q('metric-time').textContent = timeStr;
+  q('metric-power').textContent = Math.round(P_motor);
+  q('metric-buffer').textContent = bufferKm.toFixed(1);
+  q('metric-recommended').textContent = Math.round(recommendedKm);
+
+  // ═══════════════════════════════════════════
+  // TIPS
+  // ═══════════════════════════════════════════
+  generateTips(rangeKm, whPerKm, effectiveEnergy, P_motor, totalMass);
+}
+
+function generateTips(range, whkm, energy, power, mass) {
+  const container = q('tips-container');
+  const tips = [];
+
+  // Tip 1: Speed
+  if (state.speed > 30) {
+    const newSpeed = 25;
+    const v_ms_new = newSpeed / 3.6;
+    const v_kmh_new = newSpeed;
+    const windEff = state.windDir === 'headwind' ? state.windSpeed/3.6 : (state.windDir === 'cross' ? state.windSpeed/3.6*0.5 : -state.windSpeed/3.6);
+    const P_aero_new = 0.5 * CD * AREA * RHO * Math.pow(v_ms_new + windEff, 3);
+    const P_roll_new = SURFACE_CRR[state.surface] * getTireCoeff(state.pressure) * mass * G * v_ms_new;
+    const P_grav_new = mass * G * v_ms_new * Math.sin(TERRAIN[CITIES[state.city].terrain].slope * Math.PI/180);
+    const accel_new = { eco:0.05, normal:0.12, sport:0.25 }[state.style] * mass * v_ms_new;
+    let P_new = (P_roll_new + P_aero_new + P_grav_new + accel_new) * RIDING_STYLE[state.style] * state.weather * (1+((mass-BASE_MASS)/10)*0.04) * CITIES[state.city].road;
+    P_new *= (1 - TERRAIN[CITIES[state.city].terrain].regen);
+    P_new /= MOTOR_EFF;
+    const whkm_new = P_new / v_kmh_new;
+    const range_new = energy / whkm_new;
+    const delta = Math.round(range_new - range);
+    if (delta > 1) {
+      tips.push({
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+        text: 'Знизь швидкість з ' + state.speed + ' до 25 км/год',
+        delta: '+' + delta + ' км'
+      });
+    }
+  }
+
+  // Tip 2: Cargo
+  if (state.cargo > 5) {
+    const massLess = mass - 5;
+    const massFactorLess = 1 + ((massLess - BASE_MASS) / 10) * 0.04;
+    const v_ms = state.speed / 3.6;
+    const windEff = state.windDir === 'headwind' ? state.windSpeed/3.6 : (state.windDir === 'cross' ? state.windSpeed/3.6*0.5 : -state.windSpeed/3.6);
+    const P_roll_less = SURFACE_CRR[state.surface] * getTireCoeff(state.pressure) * massLess * G * v_ms;
+    const P_grav_less = massLess * G * v_ms * Math.sin(TERRAIN[CITIES[state.city].terrain].slope * Math.PI/180);
+    const accel_less = { eco:0.05, normal:0.12, sport:0.25 }[state.style] * massLess * v_ms;
+    let P_less = (P_roll_less + 0.5*CD*AREA*RHO*Math.pow(v_ms + windEff, 3) + P_grav_less + accel_less) * RIDING_STYLE[state.style] * state.weather * massFactorLess * CITIES[state.city].road;
+    P_less *= (1 - TERRAIN[CITIES[state.city].terrain].regen);
+    P_less /= MOTOR_EFF;
+    const whkm_less = P_less / state.speed;
+    const range_less = energy / whkm_less;
+    const delta = Math.round(range_less - range);
+    if (delta > 1) {
+      tips.push({
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+        text: 'Зменш вантаж на 5 кг. Розглянь легшу сумку-термос',
+        delta: '+' + delta + ' км'
+      });
+    }
+  }
+
+  // Tip 3: Riding style
+  if (state.style === 'sport') {
+    const v_ms = state.speed / 3.6;
+    const windEff = state.windDir === 'headwind' ? state.windSpeed/3.6 : (state.windDir === 'cross' ? state.windSpeed/3.6*0.5 : -state.windSpeed/3.6);
+    const accel_eco = 0.05 * mass * v_ms;
+    let P_eco = (SURFACE_CRR[state.surface]*getTireCoeff(state.pressure)*mass*G*v_ms + 0.5*CD*AREA*RHO*Math.pow(v_ms + windEff, 3) + mass*G*v_ms*Math.sin(TERRAIN[CITIES[state.city].terrain].slope*Math.PI/180) + accel_eco) * RIDING_STYLE['eco'] * state.weather * (1+((mass-BASE_MASS)/10)*0.04) * CITIES[state.city].road;
+    P_eco *= (1 - TERRAIN[CITIES[state.city].terrain].regen);
+    P_eco /= MOTOR_EFF;
+    const whkm_eco = P_eco / state.speed;
+    const range_eco = energy / whkm_eco;
+    const delta = Math.round(range_eco - range);
+    if (delta > 1) {
+      tips.push({
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+        text: 'Перейди на плавну манеру. Уникай різких стартів',
+        delta: '+' + delta + ' км'
+      });
+    }
+  }
+
+  // Tip 4: Tire pressure
+  if (state.pressure < 2.5) {
+    const crr_opt = SURFACE_CRR[state.surface] * getTireCoeff(3.0);
+    const crr_curr = SURFACE_CRR[state.surface] * getTireCoeff(state.pressure);
+    const v_ms = state.speed / 3.6;
+    const P_diff = (crr_curr - crr_opt) * mass * G * v_ms;
+    const P_new = power - P_diff;
+    const whkm_new = P_new / state.speed;
+    const range_new = energy / whkm_new;
+    const delta = Math.round(range_new - range);
+    if (delta > 1) {
+      tips.push({
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>',
+        text: 'Підкачай шини до 3.0 бар. Це безкоштовно!',
+        delta: '+' + delta + ' км'
+      });
+    }
+  }
+
+  // Tip 5: Temperature
+  if (state.temp < 5) {
+    const baseTempCoeff = getTempCoeff(state.chem, 20);
+    const currTempCoeff = getTempCoeff(state.chem, state.temp);
+    const lossPct = Math.round((1 - currTempCoeff/baseTempCoeff) * 100);
+    if (lossPct > 5) {
+      tips.push({
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>',
+        text: 'Холод знижує ємність батареї на ' + lossPct + '%. Тримай скутер у теплі до поїздки',
+        delta: ''
+      });
+    }
+  }
+
+  // Render tips
+  if (tips.length === 0) {
+    container.innerHTML = '<div class="tip-card"><div class="tip-content"><div class="tip-text">Усе оптимально! Твій запас ходу максимальний за цих умов.</div></div></div>';
+  } else {
+    container.innerHTML = tips.map(t => 
+      '<div class="tip-card fade-in">' +
+        '<div class="tip-icon">' + t.icon + '</div>' +
+        '<div class="tip-content">' +
+          '<div class="tip-text">' + t.text + '</div>' +
+          (t.delta ? '<div class="tip-delta">' + t.delta + '</div>' : '') +
+        '</div>' +
+      '</div>'
+    ).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+function init() {
+  // Filter cities by default region
+  onRegionChange();
+  calculate();
+}
+
+init();
+
+</script>
+</body>
+</html>
