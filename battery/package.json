@@ -1,0 +1,20 @@
+{
+  "name": "battery-calculator",
+  "version": "1.0.0",
+  "description": "Electric scooter battery range calculator for couriers",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 3000",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "battery",
+    "calculator",
+    "electric-scooter"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
